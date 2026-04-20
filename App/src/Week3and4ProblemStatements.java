@@ -1,110 +1,159 @@
 import java.util.*;
 
-// Client class
-class Client {
-    String name;
-    int riskScore;
-    double accountBalance;
+// Trade class
+class Trade {
+    String id;
+    int volume;
 
-    public Client(String name, int riskScore, double accountBalance) {
-        this.name = name;
-        this.riskScore = riskScore;
-        this.accountBalance = accountBalance;
+    public Trade(String id, int volume) {
+        this.id = id;
+        this.volume = volume;
     }
 
     @Override
     public String toString() {
-        return name + ":" + riskScore;
+        return id + ":" + volume;
     }
 }
 
-public class ClientRiskRanking {
+public class TradeVolumeAnalysis {
 
-    // ---------------- BUBBLE SORT (Ascending riskScore) ----------------
-    public static void bubbleSort(Client[] arr) {
-        int n = arr.length;
-        int swaps = 0;
+    // ---------------- MERGE SORT (Ascending, Stable) ----------------
+    public static void mergeSort(Trade[] arr, int left, int right) {
+        if (left < right) {
+            int mid = (left + right) / 2;
 
-        for (int i = 0; i < n - 1; i++) {
-            boolean swapped = false;
+            mergeSort(arr, left, mid);
+            mergeSort(arr, mid + 1, right);
 
-            for (int j = 0; j < n - i - 1; j++) {
-                if (arr[j].riskScore > arr[j + 1].riskScore) {
-                    Client temp = arr[j];
-                    arr[j] = arr[j + 1];
-                    arr[j + 1] = temp;
+            merge(arr, left, mid, right);
+        }
+    }
 
-                    swaps++;
-                    swapped = true;
+    private static void merge(Trade[] arr, int left, int mid, int right) {
+        int n1 = mid - left + 1;
+        int n2 = right - mid;
 
-                    // Visualization (important for demo 🎯)
-                    System.out.println("Swap: " + Arrays.toString(arr));
-                }
+        Trade[] L = new Trade[n1];
+        Trade[] R = new Trade[n2];
+
+        for (int i = 0; i < n1; i++)
+            L[i] = arr[left + i];
+        for (int j = 0; j < n2; j++)
+            R[j] = arr[mid + 1 + j];
+
+        int i = 0, j = 0, k = left;
+
+        // Stable merge
+        while (i < n1 && j < n2) {
+            if (L[i].volume <= R[j].volume) {
+                arr[k++] = L[i++];
+            } else {
+                arr[k++] = R[j++];
             }
-
-            if (!swapped) break; // optimization
         }
 
-        System.out.println("\nBubble Sorted (Ascending): " + Arrays.toString(arr));
-        System.out.println("Total Swaps: " + swaps);
+        while (i < n1) arr[k++] = L[i++];
+        while (j < n2) arr[k++] = R[j++];
     }
 
-    // ---------------- INSERTION SORT (Descending riskScore + balance) ----------------
-    public static void insertionSort(Client[] arr) {
+    // ---------------- QUICK SORT (Descending) ----------------
+    public static void quickSort(Trade[] arr, int low, int high) {
+        if (low < high) {
+            int pi = partition(arr, low, high);
 
-        for (int i = 1; i < arr.length; i++) {
-            Client key = arr[i];
-            int j = i - 1;
+            quickSort(arr, low, pi - 1);
+            quickSort(arr, pi + 1, high);
+        }
+    }
 
-            // Descending riskScore, then ascending balance
-            while (j >= 0 && compare(arr[j], key) < 0) {
-                arr[j + 1] = arr[j];
-                j--;
+    // Lomuto partition (DESC)
+    private static int partition(Trade[] arr, int low, int high) {
+        int pivot = arr[high].volume;
+        int i = low - 1;
+
+        for (int j = low; j < high; j++) {
+            if (arr[j].volume > pivot) { // DESC
+                i++;
+                swap(arr, i, j);
             }
-
-            arr[j + 1] = key;
         }
 
-        System.out.println("\nInsertion Sorted (Descending riskScore): " + Arrays.toString(arr));
+        swap(arr, i + 1, high);
+        return i + 1;
     }
 
-    // Comparator logic
-    private static int compare(Client c1, Client c2) {
-        if (c1.riskScore != c2.riskScore) {
-            return Integer.compare(c1.riskScore, c2.riskScore);
-        }
-        return Double.compare(c2.accountBalance, c1.accountBalance);
+    private static void swap(Trade[] arr, int i, int j) {
+        Trade temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
     }
 
-    // ---------------- TOP N HIGH RISK ----------------
-    public static void topHighRisk(Client[] arr, int topN) {
-        System.out.println("\nTop " + topN + " High Risk Clients:");
+    // ---------------- MERGE TWO SORTED LISTS ----------------
+    public static Trade[] mergeSortedLists(Trade[] a, Trade[] b) {
+        Trade[] result = new Trade[a.length + b.length];
 
-        for (int i = 0; i < Math.min(topN, arr.length); i++) {
-            System.out.println(arr[i].name + " (" + arr[i].riskScore + ")");
+        int i = 0, j = 0, k = 0;
+
+        while (i < a.length && j < b.length) {
+            if (a[i].volume <= b[j].volume) {
+                result[k++] = a[i++];
+            } else {
+                result[k++] = b[j++];
+            }
         }
+
+        while (i < a.length) result[k++] = a[i++];
+        while (j < b.length) result[k++] = b[j++];
+
+        return result;
+    }
+
+    // ---------------- TOTAL VOLUME ----------------
+    public static int totalVolume(Trade[] arr) {
+        int sum = 0;
+        for (Trade t : arr) {
+            sum += t.volume;
+        }
+        return sum;
     }
 
     // ---------------- MAIN ----------------
     public static void main(String[] args) {
 
-        Client[] clients = {
-                new Client("clientC", 80, 5000),
-                new Client("clientA", 20, 2000),
-                new Client("clientB", 50, 3000)
+        Trade[] trades = {
+                new Trade("trade3", 500),
+                new Trade("trade1", 100),
+                new Trade("trade2", 300)
         };
 
-        // Clone arrays for separate sorting
-        Client[] bubbleArr = clients.clone();
-        Client[] insertionArr = clients.clone();
+        // Clone arrays
+        Trade[] mergeArr = trades.clone();
+        Trade[] quickArr = trades.clone();
 
-        // Bubble Sort
-        bubbleSort(bubbleArr);
+        // Merge Sort (Ascending)
+        mergeSort(mergeArr, 0, mergeArr.length - 1);
+        System.out.println("Merge Sort (Ascending): " + Arrays.toString(mergeArr));
 
-        // Insertion Sort
-        insertionSort(insertionArr);
+        // Quick Sort (Descending)
+        quickSort(quickArr, 0, quickArr.length - 1);
+        System.out.println("Quick Sort (Descending): " + Arrays.toString(quickArr));
 
-        // Top Risk Clients
-        topHighRisk(insertionArr, 3);
+        // Merge two sorted lists (example)
+        Trade[] morning = {
+                new Trade("m1", 100),
+                new Trade("m2", 300)
+        };
+
+        Trade[] afternoon = {
+                new Trade("a1", 200),
+                new Trade("a2", 400)
+        };
+
+        Trade[] merged = mergeSortedLists(morning, afternoon);
+        System.out.println("Merged Trades: " + Arrays.toString(merged));
+
+        // Total volume
+        System.out.println("Total Volume: " + totalVolume(merged));
     }
 }
